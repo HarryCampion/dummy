@@ -1,4 +1,4 @@
 template-repository: "HarryCampion/.config-templates"
-template-branch: "update-workflow-paths"
+template-branch: "allow-other-pypi-feeds"
 exclude: |
   .github/workflows/sync.yml
