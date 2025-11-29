@@ -1,4 +1,4 @@
 template-repository: "HarryCampion/.config-templates"
-template-branch: "devcontainer-updates"
+template-branch: "main"
 exclude: |
   .github/workflows/sync.yml
