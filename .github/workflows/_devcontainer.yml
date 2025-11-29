@@ -37,7 +37,6 @@
 name: REUSABLE DEVCONTAINER BUILD
 permissions:
   contents: read
-  packages: write
 
 on:
   workflow_call:
