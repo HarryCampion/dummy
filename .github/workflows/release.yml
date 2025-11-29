@@ -10,11 +10,12 @@
 #   - 🔖 Tagging the release (Git tag)
 #   - 🏗️ Building the package with Hatch
 #   - 🐳 Building and publishing Devcontainer image (if present)
-#   - 🚀 Publishing to PyPI using OIDC (no passwords or secrets)
+#   - 🚀 Publishing to PyPI using OIDC (no passwords or secrets) or custom feed
 #   - 📦 Creating a GitHub Release with artifacts (dist + devcontainer image)
 #
 # 🔐 Security:
 #   - No PyPI credentials are stored; relies on Trusted Publishing via GitHub OIDC.
+#   - For custom feeds, secrets are used, default username is `__token__`, which is set in action by default anyway.
 #
 # 📄 Requirements:
 #   - `pyproject.toml` with a top-level `version = "..."`
@@ -127,8 +128,8 @@ jobs:
           name: dist
           path: dist
 
-  release:
-    name: Create GitHub Release
+  draft-release:
+    name: Draft GitHub Release
     runs-on: ubuntu-latest
     needs: [tag, build]
 
@@ -155,7 +156,7 @@ jobs:
     name: Publish to PyPI
     runs-on: ubuntu-latest
     environment: release
-    needs: [build, tag]
+    needs: [build, tag, draft-release]
     outputs:
       should_publish: ${{ steps.check_dist.outputs.should_publish }}
 
@@ -186,16 +187,19 @@ jobs:
           cat $GITHUB_OUTPUT
 
       # this should not take place, as "Private :: Do Not Upload" set in pyproject.toml
+      # repository-url and password only used for custom feeds, not for PyPI with OIDC
       - name: Publish to PyPI
         if: ${{ steps.check_dist.outputs.should_publish == 'true' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/
           skip-existing: true
+          repository-url: ${{ vars.PYPI_REPOSITORY_URL }}
+          password: ${{ secrets.PYPI_TOKEN }}
 
   publish-devcontainer:
     name: Publish Devcontainer
-    needs: tag
+    needs: [tag, build, draft-release]
     if: needs.tag.outputs.devcontainer_exists == 'true'
     uses: ./.github/workflows/_devcontainer.yml
     with:
@@ -208,8 +212,8 @@ jobs:
   finalise-release:
     name: Finalise Release
     runs-on: ubuntu-latest
-    needs: [tag, release, pypi, publish-devcontainer]
-    if: always() && needs.release.result == 'success'
+    needs: [tag, draft-release, pypi, publish-devcontainer]
+    if: always() && success()
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -266,10 +270,19 @@ jobs:
           PACKAGE_NAME=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['name'])")
           VERSION="${{ github.event.inputs.tag }}"
           VERSION=${VERSION#v}
-          LINK="https://pypi.org/project/$PACKAGE_NAME/$VERSION/"
+          
+          REPO_URL="${{ vars.PYPI_REPOSITORY_URL || '' }}"
+          if [ -z "$REPO_URL" ]; then
+             LINK="https://pypi.org/project/$PACKAGE_NAME/$VERSION/"
+             NAME="PyPI Package"
+          else
+             LINK="$REPO_URL"
+             NAME="Custom Feed Package"
+          fi
+
           {
             echo "message<<EOF"
-            echo "### PyPI Package"
+            echo "### $NAME"
             echo ""
             echo "[$PACKAGE_NAME]($LINK)"
             echo "EOF"
