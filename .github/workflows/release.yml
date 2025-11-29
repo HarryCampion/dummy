@@ -45,6 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       devcontainer_exists: ${{ steps.check_devcontainer.outputs.exists }}
+      image_name: ${{ steps.image_name.outputs.name }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -71,6 +72,13 @@ jobs:
           else
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
+
+      - name: Calculate Image Name
+        id: image_name
+        run: |
+          REPO="${{ github.event.repository.name }}"
+          CLEAN="${REPO#.}"
+          echo "name=${CLEAN}/devcontainer" >> $GITHUB_OUTPUT
 
       - name: Create Git Tag
         run: |
@@ -181,13 +189,13 @@ jobs:
           skip-existing: true
 
   publish-devcontainer:
-    name: Devcontainer
+    name: Publish Devcontainer
     needs: tag
     if: needs.tag.outputs.devcontainer_exists == 'true'
     uses: ./.github/workflows/_devcontainer.yml
     with:
       publish: true
-      image_name: ${{ github.event.repository.name }}/devcontainer
+      image_name: ${{ needs.tag.outputs.image_name }}
       registry: ghcr.io
       image_tags: ${{ github.event.inputs.tag }}
     secrets: inherit
@@ -200,6 +208,11 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
       - name: Login to Container Registry
         if: needs.tag.outputs.devcontainer_exists == 'true' && needs.publish-devcontainer.result == 'success'
@@ -213,7 +226,7 @@ jobs:
         if: needs.tag.outputs.devcontainer_exists == 'true' && needs.publish-devcontainer.result == 'success'
         run: |
           OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE_NAME="${{ github.event.repository.name }}/devcontainer"
+          IMAGE_NAME="${{ needs.tag.outputs.image_name }}"
           FULL_IMAGE="ghcr.io/$OWNER_LC/$IMAGE_NAME:${{ github.event.inputs.tag }}"
           docker pull $FULL_IMAGE
           FILENAME="devcontainer-${{ github.event.inputs.tag }}.tar"
@@ -231,7 +244,7 @@ jobs:
         if: needs.tag.outputs.devcontainer_exists == 'true' && needs.publish-devcontainer.result == 'success'
         run: |
           OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE_NAME="${{ github.event.repository.name }}/devcontainer"
+          IMAGE_NAME="${{ needs.tag.outputs.image_name }}"
           FULL_IMAGE="ghcr.io/$OWNER_LC/$IMAGE_NAME:${{ github.event.inputs.tag }}"
           {
             echo "message<<EOF"
@@ -245,7 +258,7 @@ jobs:
         id: pypi_link
         if: needs.pypi.outputs.should_publish == 'true' && needs.pypi.result == 'success'
         run: |
-          PACKAGE_NAME=$(sed -n 's/^name = "\(.*\)"/\1/p' pyproject.toml)
+          PACKAGE_NAME=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['name'])")
           VERSION="${{ github.event.inputs.tag }}"
           VERSION=${VERSION#v}
           LINK="https://pypi.org/project/$PACKAGE_NAME/$VERSION/"
