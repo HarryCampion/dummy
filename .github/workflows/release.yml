@@ -165,7 +165,7 @@ jobs:
           files: "dist/**"
           draft: true
 
-  # Parse .env and decide at step-level whether to publish
+  # Decide at step-level whether to publish
   pypi:
     name: Publish to PyPI
     runs-on: ubuntu-latest
@@ -269,8 +269,42 @@ jobs:
         if: steps.check_publish.outputs.should_publish == 'true'
         id: image_name
         run: |
-          IMAGE_NAME="${{ steps.registry.outputs.registry }}/${{ steps.repo_owner.outputs.owner_lc }}/${{ github.event.repository.name }}/devcontainer"
+          # Allow custom image name via DEVCONTAINER_IMAGE_NAME variable
+          CUSTOM_IMAGE="${{ vars.DEVCONTAINER_IMAGE_NAME }}"
+          if [ -n "$CUSTOM_IMAGE" ]; then
+            IMAGE_NAME="${{ steps.registry.outputs.registry }}/${{ steps.repo_owner.outputs.owner_lc }}/$CUSTOM_IMAGE"
+            echo "Using custom image name: $IMAGE_NAME"
+          else
+            # Sanitize repository name to remove leading dots
+            IMAGE_NAME="${{ steps.registry.outputs.registry }}/${{ steps.repo_owner.outputs.owner_lc }}/${{ github.event.repository.name }}/devcontainer"
+          fi
           echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
+      
+      - name: Validate Image Name
+        id: validate
+        run: |
+          IMAGE_NAME="${{ steps.image_name.outputs.image_name }}"
+          
+          # Docker image names must:
+          # - be lowercase
+          # - each component separated by / must match [a-z0-9]+(?:[._-][a-z0-9]+)*
+          if echo "$IMAGE_NAME" | grep -qE '^([a-z0-9]+(?:[._-][a-z0-9]+)*)(/([a-z0-9]+(?:[._-][a-z0-9]+)*))*$'; then
+            echo "✅ Image name is valid: $IMAGE_NAME"
+          else
+            echo "::error::Invalid Docker image name: $IMAGE_NAME"
+            echo "::error::Each component must match [a-z0-9]+(?:[._-][a-z0-9]+)*"
+            echo "::error::Components must start and end with alphanumeric characters, containing only lowercase letters, digits, periods, underscores, and hyphens."
+            echo "::error::Please check your repository name, owner, or registry configuration."
+            echo "::error::Common issues: uppercase letters, special characters (!@#\$%^&*()), consecutive separators (--), leading/trailing separators"
+            exit 1
+          fi    
+      
+      - name: Sanitize Image Tag
+        if: steps.check_publish.outputs.should_publish == 'true'
+        id: sanitized_tag
+        run: |
+          SANITIZED_TAG=$(echo "${{ needs.tag.outputs.tag }}" | tr '/' '-')
+          echo "sanitized_tag=$SANITIZED_TAG" >> $GITHUB_OUTPUT
 
       - name: Build and Publish Devcontainer Image
         if: steps.check_publish.outputs.should_publish == 'true'
@@ -279,7 +313,7 @@ jobs:
           configFile: .devcontainer/devcontainer.json
           push: always
           imageName: ${{ steps.image_name.outputs.image_name }}
-          imageTag: ${{ needs.tag.outputs.tag }}
+          imageTag: ${{ steps.sanitized_tag.outputs.sanitized_tag }}
 
   finalise-release:
     name: Finalise Release
@@ -319,7 +353,7 @@ jobs:
           PACKAGE_NAME=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['name'])")
           VERSION="${{ needs.tag.outputs.tag }}"
           VERSION=${VERSION#v}
-          
+
           REPO_URL="${{ vars.PYPI_REPOSITORY_URL || '' }}"
           if [ -z "$REPO_URL" ]; then
              LINK="https://pypi.org/project/$PACKAGE_NAME/$VERSION/"
