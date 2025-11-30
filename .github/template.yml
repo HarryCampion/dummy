@@ -2,3 +2,4 @@ template-repository: "HarryCampion/.config-templates"
 template-branch: "release-auto-bumping"
 exclude: |
   .github/workflows/sync.yml
+  pyproject.toml
