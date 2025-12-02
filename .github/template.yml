@@ -1,5 +1,5 @@
 template-repository: "HarryCampion/.config-templates"
-template-branch: "fix-release-script"
+template-branch: "script-improvements"
 exclude: |
   .github/workflows/sync.yml
   pyproject.toml
