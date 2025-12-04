@@ -1,5 +1,5 @@
 template-repository: "HarryCampion/.config-templates"
-template-branch: "main"
+template-branch: "fix-signing-tag"
 exclude: |
   .github/workflows/sync.yml
   pyproject.toml
