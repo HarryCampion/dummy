@@ -1,5 +1,5 @@
 template-repository: "HarryCampion/.config-templates"
-template-branch: "github-pages-deployment"
+template-branch: "main"
 exclude: |
   .github/workflows/sync.yml
   pyproject.toml
