@@ -1,4 +1,4 @@
-template-repository: "HarryCampion/.config-templates"
+template-repository: "Jebel-Quant/rhiza"
 template-branch: "main"
 exclude: |
   .github/workflows/sync.yml
