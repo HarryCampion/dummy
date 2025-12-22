@@ -14,7 +14,7 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
-    from config import add
+    from dummy import add
 
     return (add,)
 

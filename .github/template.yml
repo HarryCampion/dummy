@@ -1,5 +1,19 @@
-template-repository: "Jebel-Quant/rhiza"
-template-branch: "main"
-exclude: |
-  .github/workflows/sync.yml
-  pyproject.toml
+template-repository: jebel-quant/rhiza
+include:
+    - .devcontainer/
+    - .github/
+    - presentation/
+    - book/
+    - tests/
+    - .editorconfig
+    - .pre-commit-config.yaml
+    - CODE_OF_CONDUCT.md
+    - CONTRIBUTING.md
+    - README.md
+    - LICENSE
+    - Makefile
+    - ruff.toml
+    - pytest.ini
+exclude:
+    - book/minibook-templates
+    - book/pdoc-templates
