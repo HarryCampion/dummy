@@ -9,7 +9,6 @@ include:
     - .pre-commit-config.yaml
     - CODE_OF_CONDUCT.md
     - CONTRIBUTING.md
-    - README.md
     - LICENSE
     - Makefile
     - ruff.toml
