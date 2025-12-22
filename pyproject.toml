@@ -41,6 +41,9 @@ dev = [
     "pdoc>=16.0.0",
 ]
 
+[tool.marimo.runtime]
+pythonpath = ["src"]
+
 [tool.hatch.build.targets.wheel]
 # Use src-layout: package code is under src/dummy
 packages = ["src/dummy"]
