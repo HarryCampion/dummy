@@ -17,3 +17,4 @@ include:
 exclude:
     - book/minibook-templates
     - book/pdoc-templates
+    - .github/renovate.json
