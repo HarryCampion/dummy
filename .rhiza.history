@@ -11,7 +11,6 @@
 .github/TOKEN_SETUP.md
 .github/actions/setup-project/action.yml
 .github/dependabot.yml
-.github/renovate.json
 .github/scripts/book.sh
 .github/scripts/bump.sh
 .github/scripts/customisations/build-extras.sh
@@ -37,13 +36,16 @@ CODE_OF_CONDUCT.md
 CONTRIBUTING.md
 LICENSE
 Makefile
-README.md
 book/Makefile.book
 presentation/Makefile.presentation
 pytest.ini
 ruff.toml
 tests/Makefile.tests
 tests/test_rhiza/README.md
+tests/test_rhiza/benchmarks/.gitignore
+tests/test_rhiza/benchmarks/README.md
+tests/test_rhiza/benchmarks/__init__.py
+tests/test_rhiza/benchmarks/analyze_benchmarks.py
 tests/test_rhiza/conftest.py
 tests/test_rhiza/test_bump_script.py
 tests/test_rhiza/test_docstrings.py
