@@ -31,15 +31,12 @@ Homepage = "https://github.com/HarryCampion/dummy"
 Repository = "https://github.com/HarryCampion/dummy"
 Issues = "https://github.com/HarryCampion/dummy/issues"
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
-    "pytest-cov>=7.0.0",
-    "pytest-html>=4.1.1",
-    "pytest==9.0.2",
-    "pytest-benchmark>=4.1.0",
-    "pre-commit==4.5.1",
-    "marimo==0.18.4",
-    "pdoc>=16.0.0",
+    "marimo>=0.18.0",
+    "numpy>=2.4.0",
+    "plotly>=6.5.0",
+    "pandas>=2.3.3"
 ]
 
 [tool.marimo.runtime]
