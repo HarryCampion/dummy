@@ -39,6 +39,7 @@
 .rhiza/scripts/release.sh
 .rhiza/scripts/update-readme-help.sh
 .rhiza/utils/version_matrix.py
+.rhiza.env
 CODE_OF_CONDUCT.md
 CONTRIBUTING.md
 LICENSE
