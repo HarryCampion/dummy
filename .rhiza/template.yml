@@ -18,4 +18,5 @@ include:
 exclude:
 - book/minibook-templates
 - book/pdoc-templates
+- .github/workflows/docker.yml
 - .github/renovate.json
